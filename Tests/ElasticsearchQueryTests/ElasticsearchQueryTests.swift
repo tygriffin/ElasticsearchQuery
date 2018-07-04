@@ -33,6 +33,7 @@ final class ElasticsearchQueryTests: XCTestCase {
         
         q.sort(field: \.somefield, order: .asc)
         
+        q._source = [\.somefield, \.otherfield]
         
         prettyPrint(query: q)
         prettyPrint(mapping: MyIndex.shared)
