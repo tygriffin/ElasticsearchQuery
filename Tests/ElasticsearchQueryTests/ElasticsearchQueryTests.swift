@@ -17,8 +17,18 @@ final class ElasticsearchQueryTests: XCTestCase {
         
         q.query
             .bool
-            .must(.term(field: \.somefield, value: .text("somevalue")))
-            .mustNot(.term(field: \.otherfield, value: .text("othervalue")))
+            .must(
+                .term(field: \.somefield, value: .text("somevalue"))
+            )
+            .must(
+                .range(field: \.datefield, value: [
+                    .gt: .date("2017-03-01"),
+                    .lte: .date("2018-04-2")
+                ])
+            )
+            .mustNot(
+                .term(field: \.otherfield, value: .text("othervalue"))
+            )
         
         q.aggs("somedatehistogram", .dateHistogram(field: \.datefield, interval: .week))
         
