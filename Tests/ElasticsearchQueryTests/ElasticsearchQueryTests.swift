@@ -18,12 +18,8 @@ final class ElasticsearchQueryTests: XCTestCase {
         q.query
             .bool
             .must(
-                .term(field: \.somefield, value: .text("somevalue"))
-            )
-            .must(
-                .match(field: \.otherfield, value: .text("match"))
-            )
-            .must(
+                .term(field: \.somefield, value: .text("somevalue")),
+                .match(field: \.otherfield, value: .text("match")),
                 .range(field: \.datefield, value: [
                     .gt: .date("2017-03-01"),
                     .lte: .date("2018-04-2")

@@ -9,18 +9,18 @@ import Foundation
 
 public class ESBool<Index: ESIndex>: Encodable {
     @discardableResult
-    public func must(_ clause: QueryClause<Index>) -> ESBool {
-        _must.append(clause)
+    public func must(_ clauses: QueryClause<Index>...) -> ESBool {
+        _must += clauses
         return self
     }
     @discardableResult
-    public func mustNot(_ clause: QueryClause<Index>) -> ESBool {
-        _mustNot.append(clause)
+    public func mustNot(_ clauses: QueryClause<Index>...) -> ESBool {
+        _mustNot += clauses
         return self
     }
     @discardableResult
-    public func should(_ clause: QueryClause<Index>) -> ESBool {
-        _should.append(clause)
+    public func should(_ clauses: QueryClause<Index>...) -> ESBool {
+        _should += clauses
         return self
     }
     private var _must: [QueryClause<Index>] = []
