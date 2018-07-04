@@ -17,6 +17,7 @@ public enum RangeValue: String {
 public enum QueryClause<Index: ESIndex>: Encodable {
 
     case term(field: KeyPath<Index, MappingField>, value: ESValue)
+    case terms(field: KeyPath<Index, MappingField>, values: [ESValue])
     case range(field: KeyPath<Index, MappingField>, value: Dictionary<RangeValue, ESValue>)
     case match(field: KeyPath<Index, MappingField>, value: ESValue)
     
@@ -35,6 +36,18 @@ public enum QueryClause<Index: ESIndex>: Encodable {
             )
             try nestedNested.encode(value, forKey: DynamicCodingKey(stringValue: "value")!)
             
+        case .terms(let field, let values):
+            var nested = container.nestedContainer(
+                keyedBy: DynamicCodingKey.self,
+                forKey: DynamicCodingKey(stringValue: "terms")!
+            )
+            
+            var nestedNested = nested.nestedContainer(
+                keyedBy: DynamicCodingKey.self,
+                forKey: DynamicCodingKey(stringValue: Index.shared[keyPath: field].name)!
+            )
+            try nestedNested.encode(values, forKey: DynamicCodingKey(stringValue: "value")!)
+            
         case .range(let field, let value):
             var nested = container.nestedContainer(
                 keyedBy: DynamicCodingKey.self,
@@ -49,6 +62,7 @@ public enum QueryClause<Index: ESIndex>: Encodable {
             for (key, esvalue) in value {
                 try nestedNested.encodeIfPresent(esvalue, forKey: DynamicCodingKey(stringValue: key.rawValue)!)
             }
+            
         case .match(let field, let value):
             var nested = container.nestedContainer(
                 keyedBy: DynamicCodingKey.self,
