@@ -32,6 +32,9 @@ final class ElasticsearchQueryTests: XCTestCase {
         
         q.aggs("somedatehistogram", .dateHistogram(field: \.datefield, interval: .week))
         
+        q.sort(field: \.somefield, order: .asc)
+        
+        
         prettyPrint(query: q)
         prettyPrint(mapping: MyIndex.shared)
     }
