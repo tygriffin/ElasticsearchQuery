@@ -16,6 +16,10 @@ public enum ESValue: Encodable {
     case number(Double)
 }
 
+public protocol ESIndex {
+    static var shared: Self { get }
+}
+
 struct DynamicCodingKey: CodingKey {
     var stringValue: String
     
@@ -31,21 +35,22 @@ struct DynamicCodingKey: CodingKey {
     }
 }
 
-public enum QueryClause<Index: CustomStringConvertible>: Encodable {
+public enum QueryClause<Index: ESIndex>: Encodable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: DynamicCodingKey.self)
         switch self {
         case .term(let field, let value):
             var nested = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: DynamicCodingKey(stringValue: "term")!)
-            var nestedNested = nested.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: DynamicCodingKey(stringValue: field.description)!)
+            
+            var nestedNested = nested.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: DynamicCodingKey(stringValue: Index.shared[keyPath: field].name)!)
             try nestedNested.encode(value, forKey: DynamicCodingKey(stringValue: "value")!)
         }
     }
     
-    case term(field: Index, value: ESValue)
+    case term(field: KeyPath<Index, MappingField>, value: ESValue)
 }
 
-public class ESBool<Index: CustomStringConvertible>: Encodable {
+public class ESBool<Index: ESIndex>: Encodable {
     @discardableResult
     public func must(_ clause: QueryClause<Index>) -> ESBool {
         _must.append(clause)
@@ -85,7 +90,11 @@ public class ESBool<Index: CustomStringConvertible>: Encodable {
     }
 }
 
-public struct Query<Index: CustomStringConvertible>: Encodable {
+public struct Query<Index: ESIndex>: Encodable {
+    enum CodingKeys: String, CodingKey {
+        case bool
+    }
+    
     var bool = ESBool<Index>()
 }
 
@@ -95,21 +104,21 @@ public enum Interval: String, Encodable {
     case year
 }
 
-public enum Agg<Index: CustomStringConvertible>: Encodable {
+public enum Agg<Index: ESIndex>: Encodable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: DynamicCodingKey.self)
         switch self {
         case .dateHistogram(let field, let interval):
             var nested = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: DynamicCodingKey(stringValue: "dateHistogram")!)
-            try nested.encode(field.description, forKey: DynamicCodingKey(stringValue: "field")!)
+            try nested.encode(Index.shared[keyPath: field].name, forKey: DynamicCodingKey(stringValue: "field")!)
             try nested.encode(interval, forKey: DynamicCodingKey(stringValue: "interval")!)
         }
     }
     
-    case dateHistogram(field: Index, interval: Interval)
+    case dateHistogram(field: KeyPath<Index, MappingField>, interval: Interval)
 }
 
-public class ESQuery<Index: CustomStringConvertible>: Encodable {
+public class ESQuery<Index: ESIndex>: Encodable {
     enum CodingKeys: String, CodingKey {
         case query
         case _aggs = "aggs"
@@ -129,7 +138,11 @@ public enum MappingType: String, Encodable {
     case date
 }
 
-public struct MappingField: Encodable {
+public struct MappingField: CustomStringConvertible, Encodable {
+    public var description: String {
+        return name
+    }
+    
     enum CodingKeys: CodingKey {
         case type
     }
