@@ -26,6 +26,8 @@ public class ESQuery<Index: ESIndex>: Encodable {
         case aggs
         case sort
         case _source
+        case size
+        case from
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -34,9 +36,13 @@ public class ESQuery<Index: ESIndex>: Encodable {
         try container.encodeIfPresent(_aggs, forKey: .aggs)
         try container.encodeIfPresent(_sort, forKey: .sort)
         try container.encodeIfPresent(_source?.map { Index.shared[keyPath: $0].name }, forKey: ._source)
+        try container.encodeIfPresent(size, forKey: .size)
+        try container.encodeIfPresent(from, forKey: .from)
     }
     
     var _source: [KeyPath<Index, MappingField>]?
+    var size: Int?
+    var from: Int?
     var query = Query<Index>()
     func aggs(_ name: String, _ agg: Agg<Index>) {
         _aggs[name] = agg

@@ -30,6 +30,7 @@ final class ElasticsearchQueryTests: XCTestCase {
             )
         
         q.aggs("somedatehistogram", .dateHistogram(field: \.datefield, interval: .week))
+        q.aggs("nestedagg", .aggs(agg: .sum(field: \.somefield)))
         
         q.sort(field: \.somefield, order: .asc)
         

@@ -7,16 +7,43 @@
 
 import Foundation
 
-public enum Agg<Index: ESIndex>: Encodable {
+public indirect enum Agg<Index: ESIndex>: Encodable {
+    case dateHistogram(field: KeyPath<Index, MappingField>, interval: Interval)
+    case stats(field: KeyPath<Index, MappingField>)
+    case avg(field: KeyPath<Index, MappingField>)
+    case sum(field: KeyPath<Index, MappingField>)
+    case aggs(agg: Agg<Index>)
+    
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: DynamicCodingKey.self)
         switch self {
         case .dateHistogram(let field, let interval):
-            var nested = container.nestedContainer(keyedBy: DynamicCodingKey.self, forKey: DynamicCodingKey(stringValue: "dateHistogram")!)
+            var nested = container.nestedContainer(
+                keyedBy: DynamicCodingKey.self,
+                forKey: DynamicCodingKey(stringValue: "date_histogram")!
+            )
             try nested.encode(Index.shared[keyPath: field].name, forKey: DynamicCodingKey(stringValue: "field")!)
             try nested.encode(interval, forKey: DynamicCodingKey(stringValue: "interval")!)
+        case .stats(let field):
+            var nested = container.nestedContainer(
+                keyedBy: DynamicCodingKey.self,
+                forKey: DynamicCodingKey(stringValue: "stats")!
+            )
+            try nested.encode(Index.shared[keyPath: field].name, forKey: DynamicCodingKey(stringValue: "field")!)
+        case .avg(let field):
+            var nested = container.nestedContainer(
+                keyedBy: DynamicCodingKey.self,
+                forKey: DynamicCodingKey(stringValue: "avg")!
+            )
+            try nested.encode(Index.shared[keyPath: field].name, forKey: DynamicCodingKey(stringValue: "field")!)
+        case .sum(let field):
+            var nested = container.nestedContainer(
+                keyedBy: DynamicCodingKey.self,
+                forKey: DynamicCodingKey(stringValue: "sum")!
+            )
+            try nested.encode(Index.shared[keyPath: field].name, forKey: DynamicCodingKey(stringValue: "field")!)
+        case .aggs(let agg):
+            try container.encode(agg, forKey: DynamicCodingKey(stringValue: "aggs")!)
         }
     }
-    
-    case dateHistogram(field: KeyPath<Index, MappingField>, interval: Interval)
 }
